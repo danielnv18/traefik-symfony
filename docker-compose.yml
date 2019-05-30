@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+
+    php:
+        image: wodby/php:7.3-4.11.11
+        container_name: "symfony_php"
+        environment:
+            PHP_FPM_USER: wodby
+            PHP_FPM_GROUP: wodby
+        volumes:
+            - ./:/var/www/html
+    nginx:
+        image: wodby/nginx:1.15-5.5.0
+        container_name: "symfony_nginx"
+        depends_on:
+            - php
+        environment:
+            NGINX_STATIC_OPEN_FILE_CACHE: "off"
+            NGINX_ERROR_LOG_LEVEL: debug
+            NGINX_BACKEND_HOST: php
+            NGINX_VHOST_PRESET: php
+            NGINX_BACKEND_PORT: 9000
+            NGINX_SERVER_ROOT: /var/www/html/public
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - web
+            - default
+        labels:
+            - 'traefik.backend=symfony_nginx'
+            - 'traefik.docker.network=web'
+            - 'traefik.protocol=http'
+            - 'traefik.port=80'
+            - 'traefik.frontend.rule=Host:symfony.noyola.io'
+
+networks:
+    web:
+        external: true
